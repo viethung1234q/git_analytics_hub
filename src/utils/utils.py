@@ -39,9 +39,17 @@ def create_bucket(client, bucket_name):
     :param bucket_name: 
         Name of bucket to check and create if not exist
     """
-    found = client.bucket_exists(bucket_name)
-    if not found:
-        client.make_bucket(bucket_name)
-        logging.info(f"Created bucket {bucket_name}")
-    else:
-        logging.info(f"Bucket {bucket_name} already exists, start uploading data ...")
+    try:
+        # List all existing buckets
+        existing_buckets = client.list_buckets()
+        bucket_names = [bucket['Name'] for bucket in existing_buckets['Buckets']]
+
+        # Check if the bucket exists
+        if bucket_name in bucket_names:
+            print(f"Bucket '{bucket_name}' already exists! Start uploading data...")
+        else:
+            client.create_bucket(Bucket=bucket_name)
+            print(f"Bucket '{bucket_name}' created successfully.")
+
+    except ClientError as e:
+        print(f"Error: {e}")

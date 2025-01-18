@@ -3,7 +3,7 @@ import io
 import requests
 import configparser
 import logging
-from minio import Minio
+import boto3
 from datetime import datetime
 from src.utils.utils import build_config, create_bucket
 from src.utils.progress import Progress
@@ -38,48 +38,31 @@ class DataLakeIngester():
 
     def _upload_to_minio(self, bucket_name, obj_name, data, length=-1, verbal=False):
         # Create an Minio client using the loaded credentials.
-        credentials = build_config(
-            endpoint=self.config.get('minio', 'endpoint'),
-            access_key=self.config.get('minio', 'access_key'),
-            secret_key=self.config.get('minio', 'secret_key'),
-            conditional_items=[
-                (self.config.get('minio', 'use_ssl').lower() == "false", "secure", False)
-            ]
-        )
-        client = Minio(**credentials)
+        client = boto3.client('s3',**self._get_minio_credentials())
 
         # Create the bucket if it doesn't exist.
         create_bucket(client, bucket_name)
 
         try:
-            config_upload = build_config(
-                bucket_name=bucket_name,
-                object_name=obj_name,
-                data=data,
-                length=length, # 1 for unknown size
-                conditional_items=[
-                    (length == -1, "part_size", 5*1024*1024), # ìf length == -1, need to set valid part_size
-                    (verbal, "progress", Progress())
-                ]
-            )
-
-            client.put_object(**config_upload)
-
+            client.upload_fileobj(data, bucket_name, obj_name, Callback=self._s3_progress_callback)
             logging.info(f"Successfully uploaded {obj_name} to {bucket_name}")
+        except boto3.exceptions.S3UploadFailedError as e:
+            logging.error(f"Failed to upload {obj_name} to {bucket_name}: {e}")
+            raise
         except Exception as e:
-            logging.error(f"Error occured while upload to minio: {e}")
+            logging.error(f"An unexpected error occurred uploading to S3: {e}")
             raise
 
 
     def _get_minio_credentials(self):
-        credentials = {
-            "endpoint": self.config.get('minio', 'endpoint'),
-            "access_key": self.config.get('minio', 'access_key'),
-            "secret_key": self.config.get('minio', 'secret_key')
-        }
-        # If connect to localhost, do not config to use ssl
-        if self.config.get('minio', 'use_ssl').lower() == "false":
-            credentials["secure"] = False
+        credentials = build_config(
+            aws_access_key_id=self.config.get('minio', 'access_key'),
+            aws_secret_access_key=self.config.get('minio', 'secret_key'),
+            endpoint_url=self.config.get('minio', 'endpoint'),
+            conditional_items=[
+                (self.config.get('minio', 'region'), "region_name", self.config.get('minio', 'region'))
+            ]
+        )
 
         return credentials
 
@@ -109,3 +92,10 @@ class DataLakeIngester():
         config.read(config_path)
 
         return config
+
+
+    def _s3_progress_callback(self, bytes_transferred):
+        """
+        Callback function to print progress of S3 upload.
+        """
+        logging.info(f"Transferred: {bytes_transferred} bytes to S3 bucket")
