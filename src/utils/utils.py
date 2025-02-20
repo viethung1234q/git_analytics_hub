@@ -51,5 +51,5 @@ def create_bucket(client, bucket_name):
             client.create_bucket(Bucket=bucket_name)
             print(f"Bucket '{bucket_name}' created successfully.")
 
-    except ClientError as e:
+    except Exception as e:
         print(f"Error: {e}")

@@ -17,7 +17,7 @@ def main():
         process_date = now.replace(minute=0, second=0, microsecond=0) - timedelta(days=1)
         
         # Start transform data
-        transformer.serialise_raw_data()
+        transformer.serialise_raw_data(process_date)
 
         logging.info(f"Successfully serialised raw data for {process_date}")
     except Exception as e:
