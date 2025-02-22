@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 # Add the parent directory to the Python path: ~/git_analytics_hub/
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from datalake_ingester import DataLakeIngester
+from src.datalake_ingester import DataLakeIngester
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [%(levelname)s:%(filename)s:%(lineno)d] - %(message)s')

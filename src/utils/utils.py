@@ -1,7 +1,5 @@
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - [%(levelname)s:%(filename)s:%(lineno)d] - %(message)s')
-
 def build_config(conditional_items=None, **base_items):
     """
     Constructs a configuration dictionary with base key-value pairs and optional conditional items.

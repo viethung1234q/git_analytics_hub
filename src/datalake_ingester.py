@@ -6,7 +6,9 @@ import logging
 import boto3
 from datetime import datetime
 from src.utils.utils import build_config, create_bucket
-from src.utils.progress import Progress
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - [%(levelname)s:%(filename)s:%(lineno)d] - %(message)s')
+
 
 class DataLakeIngester():
     def __init__(self, dataset_base_path):

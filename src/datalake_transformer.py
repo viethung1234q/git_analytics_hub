@@ -11,13 +11,13 @@ class DataLakeTransformer:
     """
     def __init__(self, dataset_base_path):
         self.dataset_base_path = dataset_base_path
-        self.config = self.load_config()
-        self.con = self.set_duckdb_connection()
-        self.set_duckdb_s3_credentials()
+        self.config = self._load_config()
+        self.con = self._set_duckdb_connection()
+        self._set_duckdb_s3_credentials()
         logging.info("DuckDB connection initiated!")
 
 
-    def set_duckdb_connection(self):
+    def _set_duckdb_connection(self):
         """
         Create connect to DuckDB and load the necessary extensions
         """
@@ -27,7 +27,7 @@ class DataLakeTransformer:
         return conn
 
 
-    def set_duckdb_s3_credentials(self):
+    def _set_duckdb_s3_credentials(self):
         self.con.execute(f"SET s3_access_key_id='{self.config.get('minio', 'access_key')}'")
         self.con.execute(f"SET s3_secret_access_key='{self.config.get('minio', 'secret_key')}'")
         self.con.execute(f"SET s3_endpoint='{self.config.get('minio', 'endpoint')}'")
@@ -36,7 +36,7 @@ class DataLakeTransformer:
         self.con.execute(f"SET s3_use_ssl='{self.config.get('minio', 'use_ssl')}'")
 
 
-    def load_config(self):
+    def _load_config(self):
         config = configparser.ConfigParser()
         config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.ini")
         config.read(config_path)
@@ -72,16 +72,16 @@ class DataLakeTransformer:
             raise
 
 
-    def _raw_hourly_file_path(self, source_bucket, source_base_path, process_date: datetime):
+    def _raw_hourly_file_path(self, source_bucket, source_base_path, process_date):
         """
         Generate the S3 path for hourly silver exported files
         """
         partitions_path = self._partition_path(process_date, True)
-        s3_key = f"s3://{source_bucket}/{source_base_path}/{partitions_path}/*"   
-        return s3_key 
+        s3_key = f"s3://{source_bucket}/{source_base_path}/{partitions_path}/*"
+        return s3_key
 
 
-    def _partition_path(self,process_date: datetime, has_hourly_partition: bool = False):
+    def _partition_path(self,process_date, has_hourly_partition=False):
         """
         Generate the partition path based on the process date
         """
