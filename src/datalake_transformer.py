@@ -92,6 +92,17 @@ class DataLakeTransformer:
         return partition_path
 
 
+    def _generate_export_filename(self, data_type, process_date, has_hourly_partition=False, file_extension='parquet'):
+        """
+        Generate a filename for the exported data file
+        """
+        if has_hourly_partition:
+            timestamp = process_date.strftime("%Y%m%d_%H")
+        else:
+            timestamp = process_date.strftime("%Y%m%d")
+        return f"{data_type}_{timestamp}.{file_extension}"
+
+
     def register_raw_gharchive(self, source_path):
         """
         Create an in-memory table from raw GHArchive source data

@@ -37,6 +37,11 @@ class DataLakeIngester():
 
 
     def _upload_to_minio(self, bucket_name, obj_name, data, length=-1, verbal=False):
+        """
+        Upload data to Minio
+        """
+        logging.info(f"Start uploading to Minio")
+        
         # Create an Minio client using the loaded credentials.
         client = boto3.client('s3',**self._get_minio_credentials())
 
@@ -72,6 +77,7 @@ class DataLakeIngester():
 
         response = requests.get(url)
         if response.status_code == 200:
+            logging.info(f"Download complete!")
             return io.BytesIO(response.content)
         else:
             logging.error(f"Something bad happened...")
