@@ -14,8 +14,7 @@ def main():
     try:
         transformer = DataLakeTransformer("gharchive/events")
         now = datetime.now() # 2024-11-27 15:03:47.349568
-        # process_date = now.replace(minute=0, second=0, microsecond=0) - timedelta(days=1)
-        process_date = now.replace(month=1, day=17, hour=18, minute=0, second=0, microsecond=0)
+        process_date = now.replace(minute=0, second=0, microsecond=0) - timedelta(days=1)
         print(f"process_date: {process_date}")
 
         # Start transform data

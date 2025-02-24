@@ -50,38 +50,28 @@ class DataLakeTransformer:
         try:
             # Retrieve source bucket and path
             source_bucket = self.config.get("datalake", "bronze_bucket")
-            source_path = self._raw_hourly_file_path(
-                source_bucket, self.dataset_base_path, process_date
-            )
+            partitions_path = self.create_partition_path(process_date, has_hourly_partition=True)
+            source_path = f"s3://{source_bucket}/{self.dataset_base_path}/{partitions_path}/*"
 
             # Register and clean raw GHArchive data
-            gharchive_raw_result = self.register_raw_gharchive(source_path)
-            gharchive_clean_result = self.clean_raw_gharchive(gharchive_raw_result.alias)
+            raw_table = self.create_raw_table(source_path)
+            clean_table = self.create_clean_table(raw_table.alias)
 
             # Define sink bucket and path
             sink_bucket = self.config.get("datalake", "silver_bucket")
             sink_path = self.create_sink_path(
-                "clean", sink_bucket, self.dataset_base_path, process_date, True
+                "clean", sink_bucket, self.dataset_base_path, process_date, has_hourly_partition=True
             )
 
             # Serialize and export cleaned data
             logging.info(f"DuckDB - serialize and export cleaned data to {sink_path}")
-            gharchive_clean_result.write_parquet(sink_path)
+            clean_table.write_parquet(sink_path)
         except Exception as e:
             logging.error(f"Error in serialise_raw_data: {str(e)}")
             raise
 
 
-    def _raw_hourly_file_path(self, source_bucket, source_base_path, process_date):
-        """
-        Generate the S3 path for hourly silver exported files
-        """
-        partitions_path = self._partition_path(process_date, True)
-        s3_key = f"s3://{source_bucket}/{source_base_path}/{partitions_path}/*"
-        return s3_key
-
-
-    def _partition_path(self,process_date, has_hourly_partition=False):
+    def create_partition_path(self, process_date, has_hourly_partition=False):
         """
         Generate the partition path based on the process date
         """
@@ -92,7 +82,7 @@ class DataLakeTransformer:
         return partition_path
 
 
-    def _generate_export_filename(self, data_type, process_date, has_hourly_partition=False, file_extension='parquet'):
+    def generate_export_filename(self, data_type, process_date, has_hourly_partition=False, file_extension='parquet'):
         """
         Generate a filename for the exported data file
         """
@@ -103,44 +93,53 @@ class DataLakeTransformer:
         return f"{data_type}_{timestamp}.{file_extension}"
 
 
-    def register_raw_gharchive(self, source_path):
+    def create_raw_table(self, source_path, raw_table_name="raw_gharchive"):
         """
         Create an in-memory table from raw GHArchive source data
         """
-        logging.info(f"DuckDB - collect source data files: {source_path}")
-        self.con.execute(f"CREATE OR REPLACE TABLE gharchive_raw \
-                        AS FROM read_json_auto('{source_path}', ignore_errors=true)")
-        return self.con.table("gharchive_raw")
+        logging.info(f"DuckDB - creating table {raw_table_name} from: {source_path}")
 
-
-    def clean_raw_gharchive(self, raw_dataset):
-        """
-        Clean the raw GHArchive data and only selected attributed we are interest in.
-        """
         query = f'''
-        SELECT 
-            id AS "event_id",
-            actor.id AS "user_id",
-            actor.login AS "user_name",
-            actor.display_login AS "user_display_name",
-            type AS "event_type",
-            repo.id AS "repo_id",
-            repo.name AS "repo_name",
-            repo.url AS "repo_url",
-            created_at AS "event_date"
-        FROM '{raw_dataset}'
+            CREATE OR REPLACE TABLE {raw_table_name} AS 
+            FROM read_json_auto('{source_path}', ignore_errors=true)
         '''
-        logging.info("DuckDB - clean data")
-        self.con.execute(f"CREATE OR REPLACE TABLE gharchive_clean AS FROM ({query})")
-        return self.con.table("gharchive_clean")
+        self.con.execute(f"{query}")
+        return self.con.table(f"{raw_table_name}")
+
+
+    def create_clean_table(self, raw_table, clean_table_name="clean_gharchive"):
+        """
+        Perform some data cleaning on the raw GHArchive data:
+        - Only selected attributed we are interest in
+        """
+        logging.info(f"DuckDB - creating {clean_table_name}")
+
+        query = f'''
+        CREATE OR REPLACE TABLE {clean_table_name} AS 
+        FROM (
+            SELECT 
+                id AS "event_id",
+                actor.id AS "user_id",
+                actor.login AS "user_name",
+                actor.display_login AS "user_display_name",
+                type AS "event_type",
+                repo.id AS "repo_id",
+                repo.name AS "repo_name",
+                repo.url AS "repo_url",
+                created_at AS "event_date"
+            FROM '{raw_table}'
+        )
+        '''
+        self.con.execute(f"{query}")
+        return self.con.table(f"{clean_table_name}")
 
 
     def create_sink_path(self, data_type, sink_bucket, sink_base_path, process_date, has_hourly_partition=False):
         """
         Create the full S3 path for the sink file.
         """
-        partitions_path = self._partition_path(process_date, has_hourly_partition)
-        sink_filename = self._generate_export_filename(data_type, process_date, has_hourly_partition)
+        partitions_path = self.create_partition_path(process_date, has_hourly_partition)
+        sink_filename = self.generate_export_filename(data_type, process_date, has_hourly_partition)
         return f"s3://{sink_bucket}/{sink_base_path}/{partitions_path}/{sink_filename}"
 
 

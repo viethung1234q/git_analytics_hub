@@ -65,7 +65,7 @@ class DataLakeIngester():
         credentials = build_config(
             aws_access_key_id=self.config.get('minio', 'access_key'),
             aws_secret_access_key=self.config.get('minio', 'secret_key'),
-            endpoint_url=self.config.get('minio', 'endpoint'),
+            endpoint_url=self.config.get('minio', 'endpoint_s3'),
             conditional_items=[
                 (self.config.get('minio', 'region'), "region_name", self.config.get('minio', 'region'))
             ]
