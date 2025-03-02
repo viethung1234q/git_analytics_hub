@@ -143,6 +143,55 @@ class DataLakeTransformer:
         return f"s3://{sink_bucket}/{sink_base_path}/{partitions_path}/{sink_filename}"
 
 
+    def aggregate_silver_data(self, process_date):
+        """
+        Aggregate raw data and export to parquet format.
+        """
+        try:
+            
+            source_bucket = self.config.get('datalake', 'silver_bucket')
+            partitions_path = self.create_partition_path(process_date, has_hourly_partition=False)
+            source_path = f"s3://{source_bucket}/{self.dataset_base_path}/{partitions_path}/*/*.parquet"
+
+            logging.info(f"DuckDB - aggregate silver data in {source_path}")
+            agg_table = self.create_aggregated_table(source_path)
+
+            sink_bucket = self.config.get('datalake', 'gold_bucket')
+            sink_path = self.create_sink_path(
+                'agg', sink_bucket, self.dataset_base_path, process_date
+            )
+
+            logging.info(f"DuckDB - export aggregated data to {sink_path}")
+            agg_table.write_parquet(sink_path)
+        except Exception as e:
+            logging.error(f"Error in aggregate_silver_data: {str(e)}")
+            raise
+
+
+    def create_aggregated_table(self, source_path, agg_table_name="agg_gharchive"):
+        """
+        Aggregate the raw GHArchive data.
+        """
+        logging.info(f"DuckDB - creating {agg_table_name}")
+
+        query = f'''
+        CREATE OR REPLACE TABLE {agg_table_name} AS 
+        FROM (
+            SELECT 
+                event_type,
+                repo_id,
+                repo_name,
+                repo_url,
+                DATE_TRUNC('day',CAST(event_date AS TIMESTAMP)) AS event_date,
+                count(*) AS event_count
+            FROM '{source_path}'
+            GROUP BY ALL
+        )
+        '''
+        self.con.execute(f"{query}")
+        return self.con.table(f"{agg_table_name}")
+
+
     def __del__(self):
         """
         Close DuckDB connection when the object is destroyed
