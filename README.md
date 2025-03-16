@@ -41,4 +41,7 @@ mkdir -p ./airflow
 mkdir -p ./airflow/dags ./airflow/logs ./airflow/config ./airflow/plugins
 echo -e "AIRFLOW_UID=$(id -u)" > .env
 docker compose up airflow-init
-docker compose up / docker compose up -d
+docker compose up --build -d
+
+
+run 1 docker compose to start all service (airflow, minio)
