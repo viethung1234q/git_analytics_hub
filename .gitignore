@@ -1,8 +1,5 @@
 __pycache__/
-
+logs/
 # No Minio file
 .minio*/
 *bucket*/
-
-logs/
-example.py
