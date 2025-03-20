@@ -16,7 +16,7 @@ def main():
         transformer = DataLakeTransformer('gharchive/events')
         now = datetime.now()  # 2024-11-27 15:03:47.349568
         process_date = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
-        print(f"process_date: {process_date}")
+        logging.info(f"process_date: {process_date}")
 
         # Start aggregate silver data
         transformer.aggregate_silver_data(process_date)

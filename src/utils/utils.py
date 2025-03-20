@@ -46,10 +46,10 @@ def create_bucket(client, bucket_name):
 
         # Check if the bucket exists
         if bucket_name in bucket_names:
-            print(f"Bucket '{bucket_name}' already exists! Start uploading data...")
+            logging.info(f"Bucket '{bucket_name}' already exists! Start uploading data...")
         else:
             client.create_bucket(Bucket=bucket_name)
-            print(f"Bucket '{bucket_name}' created successfully.")
+            logging.info(f"Bucket '{bucket_name}' created successfully.")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logging.error(f"Error: {e}")
