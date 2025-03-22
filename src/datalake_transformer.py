@@ -102,7 +102,9 @@ class DataLakeTransformer:
         query = f'''
             CREATE OR REPLACE TABLE {raw_table_name} AS 
             FROM read_json_auto('{source_path}', ignore_errors=true)
+            LIMIT 10
         '''
+        logging.info(query)
         self.con.execute(f"{query}")
         return self.con.table(f"{raw_table_name}")
 
@@ -130,6 +132,7 @@ class DataLakeTransformer:
             FROM '{raw_table}'
         )
         '''
+        logging.info(query)
         self.con.execute(f"{query}")
         return self.con.table(f"{clean_table_name}")
 
@@ -153,7 +156,7 @@ class DataLakeTransformer:
             partitions_path = self.create_partition_path(process_date, has_hourly_partition=False)
             source_path = f"s3://{source_bucket}/{self.dataset_base_path}/{partitions_path}/*/*.parquet"
 
-            logging.info(f"DuckDB - aggregate silver data in {source_path}")
+            logging.info(f"DuckDB - aggregating silver data in {source_path}")
             agg_table = self.create_aggregated_table(source_path)
 
             sink_bucket = self.config.get('datalake', 'gold_bucket')
@@ -161,7 +164,7 @@ class DataLakeTransformer:
                 'agg', sink_bucket, self.dataset_base_path, process_date
             )
 
-            logging.info(f"DuckDB - export aggregated data to {sink_path}")
+            logging.info(f"DuckDB - export to {sink_path}")
             agg_table.write_parquet(sink_path)
         except Exception as e:
             logging.error(f"Error in aggregate_silver_data: {str(e)}")
@@ -172,7 +175,7 @@ class DataLakeTransformer:
         """
         Aggregate the raw GHArchive data.
         """
-        logging.info(f"DuckDB - creating {agg_table_name}")
+        logging.info(f"DuckDB - creating table contain aggregated data: {agg_table_name}")
 
         query = f'''
         CREATE OR REPLACE TABLE {agg_table_name} AS 

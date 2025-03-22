@@ -13,15 +13,16 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [%(levelname)s:%(f
 
 def main():
     try:
-        transformer = DataLakeTransformer('gharchive/events')
-        now = datetime.now()  # 2024-11-27 15:03:47.349568
-        process_date = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=1)
-        logging.info(f"process_date: {process_date}")
+        ymd = sys.argv[1]
+        hms = sys.argv[2]
+        process_date = datetime.strptime(f"{ymd} {hms}", "%Y-%m-%d %H:%M:%S")
+        logging.info(f"Process date: {process_date}")
 
-        # Start aggregate silver data
+        # Start aggregate data
+        transformer = DataLakeTransformer('gharchive/events')
         transformer.aggregate_silver_data(process_date)
         
-        logging.info(f"Successfully aggregated silver data for {process_date}")
+        logging.info(f"{process_date}: Successfully aggregated to gold bucket")
     except Exception as e:
         logging.error(f"Got error while aggregate data to gold bucket: {e}")
 
