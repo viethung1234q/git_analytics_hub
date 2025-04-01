@@ -104,6 +104,6 @@ class DataLakeIngester():
 
     def _s3_progress_callback(self, bytes_transferred):
         """
-        Callback function to print progress of S3 upload.
+        Callback function to display progress of S3 upload.
         """
         logging.info(f"Transferred: {bytes_transferred} bytes to S3 bucket")

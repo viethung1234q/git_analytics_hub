@@ -1,16 +1,92 @@
 ```
- $$$$$$\  $$\   $$\            $$$$$$\                      $$\             $$\     $$\                           $$\   $$\           $$\       
-$$  __$$\ \__|  $$ |          $$  __$$\                     $$ |            $$ |    \__|                          $$ |  $$ |          $$ |      
-$$ /  \__|$$\ $$$$$$\         $$ /  $$ |$$$$$$$\   $$$$$$\  $$ |$$\   $$\ $$$$$$\   $$\  $$$$$$$\  $$$$$$$\       $$ |  $$ |$$\   $$\ $$$$$$$\  
-$$ |$$$$\ $$ |\_$$  _|        $$$$$$$$ |$$  __$$\  \____$$\ $$ |$$ |  $$ |\_$$  _|  $$ |$$  _____|$$  _____|      $$$$$$$$ |$$ |  $$ |$$  __$$\ 
-$$ |\_$$ |$$ |  $$ |          $$  __$$ |$$ |  $$ | $$$$$$$ |$$ |$$ |  $$ |  $$ |    $$ |$$ /      \$$$$$$\        $$  __$$ |$$ |  $$ |$$ |  $$ |
-$$ |  $$ |$$ |  $$ |$$\       $$ |  $$ |$$ |  $$ |$$  __$$ |$$ |$$ |  $$ |  $$ |$$\ $$ |$$ |       \____$$\       $$ |  $$ |$$ |  $$ |$$ |  $$ |
-\$$$$$$  |$$ |  \$$$$  |      $$ |  $$ |$$ |  $$ |\$$$$$$$ |$$ |\$$$$$$$ |  \$$$$  |$$ |\$$$$$$$\ $$$$$$$  |      $$ |  $$ |\$$$$$$  |$$$$$$$  |
- \______/ \__|   \____/       \__|  \__|\__|  \__| \_______|\__| \____$$ |   \____/ \__| \_______|\_______/       \__|  \__| \______/ \_______/ 
-                                                                $$\   $$ |                                                                      
-                                                                \$$$$$$  |                                                                      
-                                                                 \______/                                                                       
+ $$$$$$\  $$\   $$\            $$$$$$\                      $$\             $$\     $$\                             $$\   $$\           $$\       
+$$  __$$\ \__|  $$ |          $$  __$$\                     $$ |            $$ |    \__|                            $$ |  $$ |          $$ |      
+$$ /  \__|$$\ $$$$$$\         $$ /  $$ |$$$$$$$\   $$$$$$\  $$ |$$\   $$\ $$$$$$\   $$\  $$$$$$$\  $$$$$$$\         $$ |  $$ |$$\   $$\ $$$$$$$\  
+$$ |$$$$\ $$ |\_$$  _|$$$$$$\ $$$$$$$$ |$$  __$$\  \____$$\ $$ |$$ |  $$ |\_$$  _|  $$ |$$  _____|$$  _____|$$$$$$\ $$$$$$$$ |$$ |  $$ |$$  __$$\ 
+$$ |\_$$ |$$ |  $$ |  \______|$$  __$$ |$$ |  $$ | $$$$$$$ |$$ |$$ |  $$ |  $$ |    $$ |$$ /      \$$$$$$\  \______|$$  __$$ |$$ |  $$ |$$ |  $$ |
+$$ |  $$ |$$ |  $$ |$$\       $$ |  $$ |$$ |  $$ |$$  __$$ |$$ |$$ |  $$ |  $$ |$$\ $$ |$$ |       \____$$\         $$ |  $$ |$$ |  $$ |$$ |  $$ |
+\$$$$$$  |$$ |  \$$$$  |      $$ |  $$ |$$ |  $$ |\$$$$$$$ |$$ |\$$$$$$$ |  \$$$$  |$$ |\$$$$$$$\ $$$$$$$  |        $$ |  $$ |\$$$$$$  |$$$$$$$  |
+ \______/ \__|   \____/       \__|  \__|\__|  \__| \_______|\__| \____$$ |   \____/ \__| \_______|\_______/         \__|  \__| \______/ \_______/ 
+                                                                $$\   $$ |                                                                        
+                                                                \$$$$$$  |                                                                        
+                                                                 \______/                                                                         
 ```
+## Description
+Git-Analytics-Hub is a tool that automates the collection, processing, and storage of GitHub Archive data. It runs hourly to download GitHub event data, store it in Minio, process it with DuckDB, and make the processed data available for further analysis.
+
+## Architecture
+The **Medallion Architecture** is a data lake design pattern that organises data into three zones:
+- **Bronze Zone**: Containing raw, unprocessed data ingested from various sources.
+- **Silver Zone**: Containing cleaned, conformed and potentially modeled data.
+- **Gold Zone**: Containing aggregated and curated data ready for reporting, dashboards, and advanced analytics.
+
+Git-Analytics-Hub follows this architecture, with each layer:
+- **Bronze Layer**: Stores raw GitHub Archive data in Minio.
+- **Silver Layer**: Processes raw data into structured tables in DuckDB.
+- **Gold Layer**: Aggregates and exports data as `.parquet` files for downstream use.
+
+The workflow is managed using Apache Airflow, ensuring automated and scheduled data processing.
+
+## Installation
+
+### Prerequisites
+Ensure you have the following installed:
+- **Docker** (tested with version `28.0.1`)
+- **Docker Compose** (tested with version `2.33.1`)
+- **Python** (tested with version `3.10.15`)
+
+### Setup
+Clone the repository and navigate to the project directory:
+```sh
+git clone https://github.com/viethung1234q/git_analytics_hub.git
+cd git_analytics_hub
+```
+
+## Usage
+
+### First-time setup:
+Initialize Airflow before running the services:
+```sh
+docker compose up airflow-init
+```
+Then, start the services:
+```sh
+docker compose up --build -d
+```
+
+### Subsequent runs:
+For all future runs, simply use:
+```sh
+docker compose up --build -d
+```
+
+## Configuration
+
+### Environment Variables
+Environment variables are defined in the `.env` file:
+```ini
+AIRFLOW_UID=1000
+AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true
+AIRFLOW__SCHEDULER__CATCHUP_BY_DEFAULT=false
+AIRFLOW_PROJ_DIR=./airflow
+AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Ho_Chi_Minh
+```
+
+### Project Configuration
+Project-specific configurations are stored in `git_analytics_hub/src/config.ini`:
+```ini
+[minio]
+access_key = minioadmin
+secret_key = minioadmin
+...
+```
+
+## Additional Notes
+- Airflow DAGs are configured to run hourly, processing GitHub Archive data.
+- Minio is used as object storage for raw and processed data.
+- DuckDB serves as the query engine for data transformations.
+
+For detailed documentation and contributions, refer to the official repository.
 
 
 Minio
@@ -55,6 +131,3 @@ mkdir -p ./airflow/dags ./airflow/logs ./airflow/config ./airflow/plugins
 echo -e "AIRFLOW_UID=$(id -u)" > .env
 docker compose up airflow-init
 docker compose up --build -d
-
-
-run 1 docker compose to start all service (airflow, minio)

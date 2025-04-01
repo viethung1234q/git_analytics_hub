@@ -2,7 +2,7 @@
 import sys
 import os
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # Add the parent directory to the Python path: ~/git_analytics_hub/
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
