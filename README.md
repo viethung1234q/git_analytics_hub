@@ -12,18 +12,18 @@ $$ |  $$ |$$ |  $$ |$$\       $$ |  $$ |$$ |  $$ |$$  __$$ |$$ |$$ |  $$ |  $$ |
                                                                  \______/                                                                         
 ```
 ## Description
-Git-Analytics-Hub is a tool that automates the collection, processing, and storage of GitHub Archive data. It runs hourly to download GitHub event data, store it in Minio, process it with DuckDB, and make the processed data available for further analysis.
+Git-Analytics-Hub is a tool that automates the collection, processing, and storage of GitHub Archive data. It runs hourly to download raw data from GitHub Archive. Then, it processes the raw data and aggregates the processed data, both using DuckDB. All the data is stored in MinIO.
 
 ## Architecture
-We will use muti-tire architecture - the **Medallion Architecture** - which is a data lake design pattern that organises data into three zones:
+We will use muti-tier architecture - the **Medallion Architecture** - which is a data lake design pattern that organises data into three zones:
 - **Bronze Zone**: Containing raw, unprocessed data ingested from various sources.
 - **Silver Zone**: Containing cleaned, conformed and potentially modeled data.
 - **Gold Zone**: Containing aggregated and curated data ready for reporting, dashboards, and advanced analytics.
 
-![Architecture](./images/architecture.png)
+![Architecture](./images/medallion_architecture.png)
 
 Git-Analytics-Hub follows this architecture, with each layer:
-- **Bronze Layer**: Stores raw GitHub Archive data in Minio.
+- **Bronze Layer**: Stores raw data from [GitHub Archive](https://www.gharchive.org/) data in Minio.
 - **Silver Layer**: Processes raw data into structured tables in DuckDB.
 - **Gold Layer**: Aggregates and exports data as `.parquet` files for downstream use.
 
