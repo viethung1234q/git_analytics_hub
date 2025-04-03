@@ -15,10 +15,12 @@ $$ |  $$ |$$ |  $$ |$$\       $$ |  $$ |$$ |  $$ |$$  __$$ |$$ |$$ |  $$ |  $$ |
 Git-Analytics-Hub is a tool that automates the collection, processing, and storage of GitHub Archive data. It runs hourly to download GitHub event data, store it in Minio, process it with DuckDB, and make the processed data available for further analysis.
 
 ## Architecture
-The **Medallion Architecture** is a data lake design pattern that organises data into three zones:
+We will use muti-tire architecture - the **Medallion Architecture** - which is a data lake design pattern that organises data into three zones:
 - **Bronze Zone**: Containing raw, unprocessed data ingested from various sources.
 - **Silver Zone**: Containing cleaned, conformed and potentially modeled data.
 - **Gold Zone**: Containing aggregated and curated data ready for reporting, dashboards, and advanced analytics.
+
+![Architecture](./images/architecture.png)
 
 Git-Analytics-Hub follows this architecture, with each layer:
 - **Bronze Layer**: Stores raw GitHub Archive data in Minio.
@@ -101,11 +103,6 @@ The Medallion architecture is a data lake design pattern that organises data int
 - Bronze Zone: Containing raw, unprocessed data ingested from various sources.
 - Silver Zone: Containing cleaned, conformed and potentially modeled data.
 - Gold Zone: Containing aggregated and curated data ready for reporting, dashboards, and advanced analytics.
-
-
-python3 src/scripts/fetch_raw_data.py
-python3 src/scripts/serialise_raw_data.py
-python3 src/scripts/aggregate_tf_data.py
 
 
 Lý do nên cài Airflow bằng Docker + Docker Compose trên WSL 2 thay vì cài trực tiếp bằng pip là vì:
