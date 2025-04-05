@@ -61,7 +61,13 @@ docker compose up --build -d
 ### Subsequent runs:
 For all future runs, simply use:
 ```sh
-docker compose up --build -d
+docker compose up -d
+```
+
+### Stop:
+To stop services:
+```sh
+docker compose down
 ```
 
 ## Configuration
