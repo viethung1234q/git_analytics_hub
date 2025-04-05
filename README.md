@@ -12,22 +12,24 @@ $$ |  $$ |$$ |  $$ |$$\       $$ |  $$ |$$ |  $$ |$$  __$$ |$$ |$$ |  $$ |  $$ |
                                                                  \______/                                                                         
 ```
 ## Description
-Git-Analytics-Hub is a tool that automates the collection, processing, and storage of GitHub Archive data. It runs hourly to download raw data from GitHub Archive. Then, it processes the raw data and aggregates the processed data, both using DuckDB. All the data is stored in MinIO.
+Git-Analytics-Hub is a tool that automates the collection, processing, and storage of GitHub Archive data. It runs hourly to download raw data from GitHub Archive. Then, it processes the raw data and aggregates the processed data, both using DuckDB. All the data is stored in MinIO for further analytics.
 
 ## Architecture
-We will use muti-tier architecture - the **Medallion Architecture** - which is a data lake design pattern that organises data into three zones:
+Git-Analytics-Hub uses muti-tier architecture - the **Medallion Architecture** - which is a data lake design pattern that organises data into three zones:
 - **Bronze Zone**: Containing raw, unprocessed data ingested from various sources.
 - **Silver Zone**: Containing cleaned, conformed and potentially modeled data.
 - **Gold Zone**: Containing aggregated and curated data ready for reporting, dashboards, and advanced analytics.
 
 ![Architecture](./images/medallion_architecture.png)
 
-Git-Analytics-Hub follows this architecture, with each layer:
-- **Bronze Layer**: Stores raw data from [GitHub Archive](https://www.gharchive.org/) data in Minio.
-- **Silver Layer**: Processes raw data into structured tables in DuckDB.
-- **Gold Layer**: Aggregates and exports data as `.parquet` files for downstream use.
+Each zone in Git-Analytics-Hub is responsible for the following:
+- **Bronze Zone**: Stores raw data from [GitHub Archive](https://www.gharchive.org/) data in Minio.
+- **Silver Zone**: Stores processed data as `.parquet` file. Data is processed by selecting only need fields using DuckDB
+- **Gold Zone**: Stores aggregated data as `.parquet` files. Data is aggregated for each day using DuckDB, ready for downstream use.
 
 The workflow is managed using Apache Airflow, ensuring automated and scheduled data processing.
+
+![Architecture](./images/git-analytics-hub_architecture.png)
 
 ## Installation
 
