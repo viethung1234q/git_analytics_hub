@@ -12,7 +12,7 @@ $$ |  $$ |$$ |  $$ |$$\       $$ |  $$ |$$ |  $$ |$$  __$$ |$$ |$$ |  $$ |  $$ |
                                                                  \______/                                                                         
 ```
 ## Description
-Git-Analytics-Hub is a tool that automates the collection, processing, and storage of GitHub Archive data. It runs hourly to download raw data from GitHub Archive. Then, it processes the raw data and aggregates the processed data, both using DuckDB. All the data is stored in MinIO for further analytics.
+Git-Analytics-Hub is a tool that automates the collection, processing, and storage of GitHub Archive data, which provide a full record of GitHub activities for public repositories. It runs hourly to download raw data from GitHub Archive. Then, it processes the raw data and aggregates the processed data, both using DuckDB. All the data is stored in MinIO for further analytics.
 
 ## Architecture
 Git-Analytics-Hub uses muti-tier architecture - the **Medallion Architecture** - which is a data lake design pattern that organises data into three zones:
@@ -78,8 +78,7 @@ Environment variables are defined in the `.env` file:
 AIRFLOW_UID=1000
 AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true
 AIRFLOW__SCHEDULER__CATCHUP_BY_DEFAULT=false
-AIRFLOW_PROJ_DIR=./airflow
-AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Ho_Chi_Minh
+...
 ```
 
 ### Project Configuration
@@ -99,20 +98,6 @@ secret_key = minioadmin
 For detailed documentation and contributions, refer to the official repository.
 
 
-Minio
-DuckDB
-Gharchive
-Hourly fetched data
-
-Incrementally collecting the Github Archive datasets, which provide a full record of GitHub activities for public repositories, and enabling analytics on top of that data.
-
-We will use Medallion architecture/multi-tier architecture for this project. 
-The Medallion architecture is a data lake design pattern that organises data into three zones:
-- Bronze Zone: Containing raw, unprocessed data ingested from various sources.
-- Silver Zone: Containing cleaned, conformed and potentially modeled data.
-- Gold Zone: Containing aggregated and curated data ready for reporting, dashboards, and advanced analytics.
-
-
 Lý do nên cài Airflow bằng Docker + Docker Compose trên WSL 2 thay vì cài trực tiếp bằng pip là vì:
 
 1. Dễ dàng quản lý và triển khai
@@ -128,11 +113,3 @@ Nếu có lỗi, chỉ cần pull lại image cũ là xong.
 Bạn đang dùng Minio và DuckDB, có thể chạy chúng trong các container riêng và kết nối với Airflow qua Docker Compose mà không cần cài đặt riêng lẻ.
 
 -> Kết luận: Cài đặt bằng Docker giúp bạn dễ quản lý, dễ mở rộng, không lo lỗi dependency, phù hợp để triển khai trên bất kỳ hệ thống nào. 🚀
-
-
-curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.10.5/docker-compose.yaml'
-mkdir -p ./airflow
-mkdir -p ./airflow/dags ./airflow/logs ./airflow/config ./airflow/plugins
-echo -e "AIRFLOW_UID=$(id -u)" > .env
-docker compose up airflow-init
-docker compose up --build -d
