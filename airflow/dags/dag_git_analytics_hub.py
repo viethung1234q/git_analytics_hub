@@ -3,6 +3,7 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator, ShortCircuitOperator
+from airflow.utils.email import send_email
 from datetime import datetime, timedelta
 
 
@@ -36,6 +37,24 @@ def check_counter_value():
     Variable.set(counter_var, counter)
     print(f"Current counter: {counter}")
     return False
+
+
+def send_email_alert():
+    """Send email notification using Airflow email backend."""
+    try:
+        send_email(
+            to=["<your_email"],  # Replace with your actual email,
+            subject="Airflow Notification: Aggregation Successfully ✅",
+            html_content="""
+                <h2>Airflow Notification</h2>
+                <p>Aggregation has been processed successfully.</p>
+                <p>Go to your Airflow UI for more details.</p>
+            """
+        )
+        print("OK")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
 
 with DAG(
     'git_analytics_hub',
@@ -86,5 +105,10 @@ with DAG(
         do_xcom_push=False
     )
 
+    notify_to_email = PythonOperator(
+        task_id='notify_to_email',
+        python_callable=send_email_alert
+    )
+
     # Task dependencies
-    get_process_date >> fetch_data >> serialise_data >> check_counter >> aggregate_data
+    get_process_date >> fetch_data >> serialise_data >> check_counter >> aggregate_data >> notify_to_email
