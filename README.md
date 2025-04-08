@@ -70,7 +70,7 @@ send_email(
 )
 ```
 
-Finally, create a new SMTP connection in the Airflow UI.
+Finally, create a connection called `smtp_default` of `Email` type for email sending.
 
 ### Subsequent runs:
 For all future runs, simply use:
