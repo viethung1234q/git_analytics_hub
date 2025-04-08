@@ -57,6 +57,20 @@ Then, start the services:
 ```sh
 docker compose up --build -d
 ```
+To enable email notifications from Airflow, configure both the sender and receiver email addresses.
+Set the sender address in the `.env` file:
+```sh
+AIRFLOW__SMTP__SMTP_MAIL_FROM=your_email@example.com
+```
+Update the recipient address in the `dag_git_analytics_hub.py` file:
+```sh
+send_email(
+    to=["your_email@example.com"],  # Replace with your actual email
+    ...
+)
+```
+
+Finally, create a new SMTP connection in the Airflow UI.
 
 ### Subsequent runs:
 For all future runs, simply use:
@@ -96,20 +110,3 @@ secret_key = minioadmin
 - DuckDB serves as the query engine for data transformations.
 
 For detailed documentation and contributions, refer to the official repository.
-
-
-Lý do nên cài Airflow bằng Docker + Docker Compose trên WSL 2 thay vì cài trực tiếp bằng pip là vì:
-
-1. Dễ dàng quản lý và triển khai
-Tất cả thành phần của Airflow (Scheduler, Webserver, Database) được đóng gói trong Docker container, không cần cài đặt thủ công PostgreSQL/MySQL hay các dependency khác.
-Khi cần di chuyển Airflow sang môi trường khác (server, cloud), chỉ cần pull Docker image về và chạy.
-2. Tránh xung đột môi trường
-Airflow có rất nhiều dependency (SQLAlchemy, Flask, Celery...) dễ gây lỗi nếu cài bằng pip trên môi trường local.
-Nếu bạn cài Airflow trực tiếp trên WSL 2, có thể xảy ra xung đột giữa Python version hoặc package dependency với các thư viện khác.
-3. Dễ dàng cập nhật và rollback
-Với Docker, nếu có bản cập nhật Airflow, chỉ cần thay đổi image version và restart container, không lo về lỗi do cài đặt thủ công.
-Nếu có lỗi, chỉ cần pull lại image cũ là xong.
-4. Tích hợp dễ dàng với Minio và DuckDB
-Bạn đang dùng Minio và DuckDB, có thể chạy chúng trong các container riêng và kết nối với Airflow qua Docker Compose mà không cần cài đặt riêng lẻ.
-
--> Kết luận: Cài đặt bằng Docker giúp bạn dễ quản lý, dễ mở rộng, không lo lỗi dependency, phù hợp để triển khai trên bất kỳ hệ thống nào. 🚀
